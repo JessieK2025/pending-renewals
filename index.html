@@ -465,16 +465,45 @@
 
         // Initialize charts and content
         function initializeReport() {
-            createBlockersChart();
-            createAgeChart();
-            createCarriersChart();
-            populateBrokersList();
-            populateCarriersList();
+            try {
+                createBlockersChart();
+            } catch (e) {
+                console.error('Error creating blockers chart:', e);
+            }
+            
+            try {
+                createAgeChart();
+            } catch (e) {
+                console.error('Error creating age chart:', e);
+            }
+            
+            try {
+                createCarriersChart();
+            } catch (e) {
+                console.error('Error creating carriers chart:', e);
+            }
+            
+            try {
+                populateBrokersList();
+            } catch (e) {
+                console.error('Error populating brokers list:', e);
+            }
+            
+            try {
+                populateCarriersList();
+            } catch (e) {
+                console.error('Error populating carriers list:', e);
+            }
         }
 
         function createBlockersChart() {
-            const ctx = document.getElementById('blockersChart').getContext('2d');
-            new Chart(ctx, {
+            const ctx = document.getElementById('blockersChart');
+            if (!ctx) {
+                console.error('Blockers chart canvas not found');
+                return;
+            }
+            
+            new Chart(ctx.getContext('2d'), {
                 type: 'doughnut',
                 data: {
                     labels: Object.keys(renewalsData.blockers),
@@ -504,8 +533,13 @@
         }
 
         function createAgeChart() {
-            const ctx = document.getElementById('ageChart').getContext('2d');
-            new Chart(ctx, {
+            const ctx = document.getElementById('ageChart');
+            if (!ctx) {
+                console.error('Age chart canvas not found');
+                return;
+            }
+            
+            new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: Object.keys(renewalsData.ageDistribution),
@@ -533,23 +567,34 @@
 
         function createCarriersChart() {
             const ctx = document.getElementById('carriersChart').getContext('2d');
+            
+            // Sort carriers by case count for better visualization
+            const sortedCarriers = Object.entries(renewalsData.carriers)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10); // Top 10 carriers
+            
             new Chart(ctx, {
-                type: 'horizontalBar',
+                type: 'bar',
                 data: {
-                    labels: Object.keys(renewalsData.carriers),
+                    labels: sortedCarriers.map(([name]) => name),
                     datasets: [{
-                        label: 'Cases',
-                        data: Object.values(renewalsData.carriers),
+                        label: 'Number of Cases',
+                        data: sortedCarriers.map(([,count]) => count),
                         backgroundColor: '#667eea',
+                        borderColor: '#4c63d2',
                         borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
+                    indexAxis: 'y',
                     scales: {
                         x: {
                             beginAtZero: true,
-                            ticks: { stepSize: 1 }
+                            ticks: { 
+                                stepSize: 1,
+                                precision: 0
+                            }
                         }
                     },
                     plugins: {
