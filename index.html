@@ -3,249 +3,468 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pending Renewals Analysis Report</title>
+    <title>ThreeFlow Pending Renewals Analysis</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
+        * {
             margin: 0;
-            padding: 20px;
-            background-color: #f5f7fa;
+            padding: 0;
+            box-sizing: border-box;
         }
+        
+        body {
+            font-family: 'Lato', sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #00B980 0%, #53B684 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             overflow: hidden;
         }
+        
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #000099 0%, #7A7FF5 100%);
             color: white;
-            padding: 30px;
+            padding: 40px;
             text-align: center;
+            position: relative;
         }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="1" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
         .header h1 {
-            margin: 0 0 10px 0;
-            font-size: 2.5em;
-            font-weight: 700;
+            font-size: 3em;
+            font-weight: 900;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
+        
         .header p {
-            margin: 0;
-            font-size: 1.2em;
-            opacity: 0.9;
+            font-size: 1.3em;
+            font-weight: 300;
+            opacity: 0.95;
         }
+        
         .nav-tabs {
             display: flex;
-            background: #f8f9fc;
-            border-bottom: 2px solid #e2e8f0;
+            background: #f8fffe;
+            border-bottom: 3px solid #00B980;
+            overflow-x: auto;
         }
+        
         .nav-tab {
             flex: 1;
-            padding: 15px 20px;
+            min-width: 120px;
+            padding: 18px 25px;
             background: none;
             border: none;
             cursor: pointer;
+            font-family: 'Lato', sans-serif;
             font-size: 16px;
-            font-weight: 600;
-            color: #64748b;
+            font-weight: 700;
+            color: #1A7848;
             transition: all 0.3s ease;
-            border-bottom: 3px solid transparent;
+            border-bottom: 4px solid transparent;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+        
         .nav-tab:hover {
-            background: #e2e8f0;
-            color: #475569;
+            background: #85DABA;
+            color: #000099;
+            transform: translateY(-2px);
         }
+        
         .nav-tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+            color: #000099;
+            border-bottom-color: #000099;
             background: white;
+            box-shadow: 0 -2px 10px rgba(0,0,153,0.2);
         }
+        
         .tab-content {
             display: none;
-            padding: 30px;
+            padding: 40px;
+            background: #fafffe;
         }
+        
         .tab-content.active {
             display: block;
         }
+        
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
         }
+        
         .stat-card {
             background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            border-left: 4px solid #667eea;
-            transition: transform 0.2s ease;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-left: 6px solid #00B980;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #85DABA 0%, #53B684 100%);
+            border-radius: 50%;
+            opacity: 0.1;
+            transition: all 0.3s ease;
+        }
+        
         .stat-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
         }
+        
+        .stat-card:hover::before {
+            top: -25%;
+            right: -25%;
+            opacity: 0.2;
+        }
+        
         .stat-number {
-            font-size: 2.5em;
-            font-weight: 700;
-            color: #1e293b;
+            font-size: 3.2em;
+            font-weight: 900;
+            color: #000099;
             margin: 0;
+            position: relative;
+            z-index: 1;
         }
+        
         .stat-label {
-            color: #64748b;
-            font-size: 1.1em;
-            margin: 5px 0 0 0;
+            color: #1A7848;
+            font-size: 1.2em;
+            font-weight: 400;
+            margin: 8px 0 0 0;
+            position: relative;
+            z-index: 1;
         }
+        
         .chart-container {
             background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-radius: 15px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-top: 4px solid #7A7FF5;
         }
+        
         .chart-title {
-            font-size: 1.5em;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .broker-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            border-left: 4px solid #f59e0b;
-        }
-        .broker-name {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 10px;
-        }
-        .broker-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .broker-stat {
-            text-align: center;
-            padding: 10px;
-            background: #f8f9fc;
-            border-radius: 8px;
-        }
-        .broker-stat-number {
             font-size: 1.8em;
             font-weight: 700;
-            color: #667eea;
+            color: #000099;
+            margin-bottom: 25px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+        
+        .broker-frequency-container {
+            background: linear-gradient(135deg, #A3A5F9 0%, #7A7FF5 100%);
+            border-radius: 15px;
+            padding: 35px;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .broker-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-left: 6px solid #8A288E;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .broker-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #8A288E, #B263C8, #D89CE8);
+        }
+        
+        .high-frequency {
+            border-left-color: #D7CC43;
+        }
+        
+        .high-frequency::before {
+            background: linear-gradient(90deg, #D7CC43, #EAE950, #FFFB99);
+        }
+        
+        .broker-name {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #000099;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .frequency-badge {
+            background: #D7CC43;
+            color: #000099;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        
+        .broker-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .broker-stat {
+            text-align: center;
+            padding: 15px;
+            background: #f8fffe;
+            border-radius: 10px;
+            border: 2px solid #85DABA;
+        }
+        
+        .broker-stat-number {
+            font-size: 2em;
+            font-weight: 900;
+            color: #000099;
+        }
+        
         .broker-stat-label {
-            color: #64748b;
+            color: #1A7848;
             font-size: 0.9em;
+            font-weight: 600;
+            text-transform: uppercase;
         }
-        .blockers-list {
+        
+        .age-distribution {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .age-segment {
+            text-align: center;
+            padding: 10px 5px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .age-fresh { background: #85DABA; color: #1A7848; }
+        .age-recent { background: #EAE950; color: #000099; }
+        .age-standard { background: #A3A5F9; color: #000099; }
+        .age-aging { background: #D89CE8; color: #8A288E; }
+        .age-critical { background: #B263C8; color: white; }
+        .age-urgent { background: #8A288E; color: white; }
+        
+        .patterns-list {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 15px;
         }
-        .blocker-tag {
-            background: #e0e7ff;
-            color: #3730a3;
-            padding: 6px 12px;
-            border-radius: 20px;
+        
+        .pattern-tag {
+            padding: 6px 15px;
+            border-radius: 25px;
             font-size: 0.85em;
-            font-weight: 500;
+            font-weight: 600;
+            text-transform: uppercase;
         }
+        
+        .pattern-incumbent { background: #FFFB99; color: #8A288E; }
+        .pattern-contact { background: #D89CE8; color: #000099; }
+        .pattern-ieb { background: #85DABA; color: #1A7848; }
+        .pattern-docs { background: #EAE950; color: #000099; }
+        .pattern-clarification { background: #A3A5F9; color: #000099; }
+        
         .insights-section {
-            background: #f0f9ff;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
-            border-left: 4px solid #0ea5e9;
+            background: linear-gradient(135deg, #00B980 0%, #53B684 100%);
+            border-radius: 15px;
+            padding: 35px;
+            margin-bottom: 30px;
+            color: white;
         }
+        
         .insights-title {
-            font-size: 1.4em;
-            font-weight: 600;
-            color: #0c4a6e;
-            margin-bottom: 15px;
+            font-size: 2em;
+            font-weight: 900;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+        
         .insight-item {
-            margin-bottom: 15px;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
+            margin-bottom: 25px;
+            padding: 25px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            color: #1A7848;
+            border-left: 6px solid #000099;
         }
+        
         .insight-title {
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 8px;
+            font-weight: 700;
+            color: #000099;
+            margin-bottom: 12px;
+            font-size: 1.2em;
         }
-        .alert-high { border-left-color: #dc2626; }
-        .alert-medium { border-left-color: #f59e0b; }
-        .alert-low { border-left-color: #10b981; }
+        
+        .conversations-section {
+            background: linear-gradient(135deg, #7A7FF5 0%, #A3A5F9 100%);
+            border-radius: 15px;
+            padding: 35px;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .question-item {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            color: #000099;
+            border-left: 6px solid #8A288E;
+        }
+        
+        .question-title {
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
         
         .filter-section {
-            background: #f8f9fc;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
+            background: #f8fffe;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #85DABA;
         }
+        
         .filter-controls {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+            gap: 20px;
         }
+        
         .filter-control select {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        .cases-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .cases-table th,
-        .cases-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .cases-table th {
-            background: #f8f9fc;
+            padding: 12px 15px;
+            border: 2px solid #00B980;
+            border-radius: 10px;
+            font-family: 'Lato', sans-serif;
+            font-size: 16px;
             font-weight: 600;
-            color: #1e293b;
+            color: #1A7848;
+            background: white;
+            cursor: pointer;
         }
-        .age-badge {
-            padding: 4px 8px;
+        
+        .aging-analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .aging-stat {
+            text-align: center;
+            padding: 20px 15px;
             border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 500;
+            font-weight: 700;
         }
-        .age-new { background: #dcfce7; color: #166534; }
-        .age-medium { background: #fef3c7; color: #92400e; }
-        .age-old { background: #fecaca; color: #991b1b; }
+        
+        .aging-stat-number {
+            font-size: 2.5em;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+        
+        .aging-stat-label {
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            .header {
+                padding: 25px 20px;
+            }
+            .header h1 {
+                font-size: 2.2em;
+            }
+            .tab-content {
+                padding: 25px 20px;
+            }
+            .nav-tab {
+                padding: 15px 10px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Pending Renewals Analysis</h1>
-            <p>Internal Team Blocker Analysis Report - 42 Total Cases</p>
+            <div class="header-content">
+                <h1>ThreeFlow Pending Renewals</h1>
+                <p>Internal Team Analysis Dashboard - 42 Total Cases</p>
+            </div>
         </div>
         
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="showTab('overview')">Overview</button>
-            <button class="nav-tab" onclick="showTab('brokers')">Broker Analysis</button>
-            <button class="nav-tab" onclick="showTab('carriers')">Carrier Analysis</button>
-            <button class="nav-tab" onclick="showTab('insights')">Key Insights</button>
+            <button class="nav-tab" onclick="showTab('aging')">Aging Analysis</button>
+            <button class="nav-tab" onclick="showTab('brokers')">Broker Frequency</button>
+            <button class="nav-tab" onclick="showTab('patterns')">Key Patterns</button>
+            <button class="nav-tab" onclick="showTab('insights')">Strategic Insights</button>
+            <button class="nav-tab" onclick="showTab('conversations')">Open Questions</button>
         </div>
         
         <div id="overview" class="tab-content active">
@@ -263,30 +482,65 @@
                     <div class="stat-label">Oldest Case (Days)</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">28</div>
-                    <div class="stat-label">Unique Brokers</div>
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Cases Over 60 Days</div>
                 </div>
             </div>
             
             <div class="chart-container">
-                <div class="chart-title">Main Blockers Distribution</div>
-                <canvas id="blockersChart" width="400" height="200"></canvas>
+                <div class="chart-title">Key Blocker Patterns</div>
+                <canvas id="patternsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        
+        <div id="aging" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-title">Detailed Aging Analysis</div>
+                <canvas id="agingChart" width="400" height="250"></canvas>
             </div>
             
-            <div class="chart-container">
-                <div class="chart-title">Case Age Distribution</div>
-                <canvas id="ageChart" width="400" height="200"></canvas>
+            <div class="aging-analysis-grid">
+                <div class="aging-stat age-fresh">
+                    <div class="aging-stat-number">15</div>
+                    <div class="aging-stat-label">0-7 Days<br>(Fresh)</div>
+                </div>
+                <div class="aging-stat age-recent">
+                    <div class="aging-stat-number">6</div>
+                    <div class="aging-stat-label">8-14 Days<br>(Recent)</div>
+                </div>
+                <div class="aging-stat-stats age-standard">
+                    <div class="aging-stat-number">8</div>
+                    <div class="aging-stat-label">15-30 Days<br>(Standard)</div>
+                </div>
+                <div class="aging-stat age-aging">
+                    <div class="aging-stat-number">9</div>
+                    <div class="aging-stat-label">31-60 Days<br>(Aging)</div>
+                </div>
+                <div class="aging-stat age-critical">
+                    <div class="aging-stat-number">2</div>
+                    <div class="aging-stat-label">61-90 Days<br>(Critical)</div>
+                </div>
+                <div class="aging-stat age-urgent">
+                    <div class="aging-stat-number">2</div>
+                    <div class="aging-stat-label">90+ Days<br>(URGENT)</div>
+                </div>
             </div>
         </div>
         
         <div id="brokers" class="tab-content">
+            <div class="broker-frequency-container">
+                <h2 style="margin-bottom: 20px; font-size: 1.8em; text-align: center;">BROKER FREQUENCY ANALYSIS</h2>
+                <p style="text-align: center; font-size: 1.1em; margin-bottom: 25px;">Brokers with multiple pending cases require immediate attention</p>
+            </div>
+            
             <div class="filter-section">
-                <h3>Filter Brokers</h3>
+                <h3 style="color: #000099; margin-bottom: 15px;">Filter Brokers</h3>
                 <div class="filter-controls">
                     <select id="brokerFilter" onchange="filterBrokers()">
                         <option value="all">All Brokers</option>
-                        <option value="high">High Volume (3+ cases)</option>
-                        <option value="old">Oldest Cases (30+ days avg)</option>
+                        <option value="high">High Frequency (3+ cases)</option>
+                        <option value="aging">Cases Over 30 Days</option>
+                        <option value="critical">Critical Age (60+ days)</option>
                     </select>
                 </div>
             </div>
@@ -296,90 +550,118 @@
             </div>
         </div>
         
-        <div id="carriers" class="tab-content">
-            <div class="chart-container">
-                <div class="chart-title">Cases by Carrier</div>
-                <canvas id="carriersChart" width="400" height="300"></canvas>
+        <div id="patterns" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">14</div>
+                    <div class="stat-label">Missing Carrier Contact</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">IEB Closed Cases</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Incumbent Not Invited</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Needs Clarification</div>
+                </div>
             </div>
             
-            <div id="carriersList">
-                <!-- Carrier analysis will be populated here -->
+            <div class="chart-container">
+                <div class="chart-title">Pattern Distribution</div>
+                <canvas id="patternsDetailChart" width="400" height="200"></canvas>
             </div>
         </div>
         
         <div id="insights" class="tab-content">
             <div class="insights-section">
-                <div class="insights-title">🚨 Critical Issues</div>
+                <div class="insights-title">🎯 Strategic Insights</div>
                 
-                <div class="insight-item alert-high">
-                    <div class="insight-title">Missing Documents/Rates - Top Blocker</div>
-                    <p><strong>38.1% of all cases (16 cases)</strong> are blocked due to missing documents or current rates. This is the #1 issue preventing renewals processing.</p>
-                    <p><strong>Action needed:</strong> Implement proactive document collection process with brokers before renewal deadlines.</p>
+                <div class="insight-item">
+                    <div class="insight-title">Missing Carrier Contact - Top Reactive Issue (14 cases)</div>
+                    <p><strong>33% of all cases</strong> are blocked due to missing carrier contacts. This is our #1 reactive blocker.</p>
+                    <p><strong>Proactive solution:</strong> Implement carrier contact collection at point of renewal receipt. Create a standardized contact verification process within 24 hours of renewal submission.</p>
                 </div>
                 
-                <div class="insight-item alert-high">
-                    <div class="insight-title">Oldest Cases Require Immediate Attention</div>
-                    <p>Cases over 60 days old represent critical renewal risks. The oldest case is <strong>212 days old</strong> from Alliant Insurance Services.</p>
-                    <p><strong>Priority brokers for immediate outreach:</strong> Alliant Insurance Services (212 days), CAC Agency (106 days), and The Partners Group (avg 52 days).</p>
+                <div class="insight-item">
+                    <div class="insight-title">IEB Closed - Systematic Issue (6 cases)</div>
+                    <p><strong>14% of cases</strong> involve closed IEBs, often indicating lost BOR or account status changes.</p>
+                    <p><strong>Reactive efficiency:</strong> Create immediate escalation protocol for IEB closed cases. Establish direct broker communication channel for BOR verification within 2 business days.</p>
                 </div>
                 
-                <div class="insight-item alert-low">
-                    <div class="insight-title">Guardian Dominance in Pending Cases</div>
-                    <p><strong>Guardian represents 35.7% of all pending cases (15 cases)</strong>, significantly higher than other carriers. This concentration may indicate carrier-specific processing challenges.</p>
-                    <p><strong>Action needed:</strong> Review Guardian renewal processes and timelines for potential improvements.</p>
+                <div class="insight-item">
+                    <div class="insight-title">Incumbent Not Invited - Approval Bottleneck (5 cases)</div>
+                    <p><strong>12% of cases</strong> require approval for marketing without incumbent participation.</p>
+                    <p><strong>Reactive efficiency:</strong> Streamline approval process with pre-authorized criteria. Create fast-track approval for standard scenarios.</p>
                 </div>
                 
-                <div class="insight-item alert-medium">
-                    <div class="insight-title">High-Volume Broker Patterns</div>
-                    <p><strong>M3 (7 cases)</strong> and <strong>McGohan Brabender (4 cases)</strong> have the most pending renewals, suggesting systematic issues rather than isolated problems.</p>
-                    <p><strong>Focus areas:</strong> M3 shows "Other/Unclear" blockers - needs better documentation of specific issues. McGohan Brabender has broker communication problems.</p>
+                <div class="insight-item">
+                    <div class="insight-title">High-Frequency Brokers Need Relationship Management</div>
+                    <p><strong>M3 (7 cases)</strong> and <strong>McGohan Brabender (4 cases)</strong> show systematic issues.</p>
+                    <p><strong>Action needed:</strong> Schedule dedicated broker relationship sessions to address recurring patterns and improve process efficiency.</p>
                 </div>
             </div>
-            
-            <div class="insights-section">
-                <div class="insights-title">📊 Recommended Actions</div>
+        </div>
+        
+        <div id="conversations" class="tab-content">
+            <div class="conversations-section">
+                <div class="insights-title">💬 Open Questions for Management Discussion</div>
                 
-                <div class="insight-item">
-                    <div class="insight-title">1. Implement Document Pre-Collection</div>
-                    <p>Create automated reminders 45-60 days before renewal dates requesting current rates and renewal documents.</p>
+                <div class="question-item">
+                    <div class="question-title">Carrier Contact Collection Strategy</div>
+                    <p><strong>Question:</strong> Should we implement mandatory carrier contact verification as part of our initial renewal intake process?</p>
+                    <p><strong>Consider:</strong> What's the optimal timing for collecting this information? How can we incentivize brokers to provide complete contact details upfront?</p>
                 </div>
                 
-                <div class="insight-item">
-                    <div class="insight-title">2. Broker Relationship Management</div>
-                    <p>Schedule quarterly check-ins with high-volume brokers to address systematic blockers.</p>
+                <div class="question-item">
+                    <div class="question-title">Undeliverable Communication Protocol</div>
+                    <p><strong>Question:</strong> When is it appropriate to mark communications as "undeliverable" versus continuing outreach attempts?</p>
+                    <p><strong>Consider:</strong> Should we establish a standard number of contact attempts? What alternative communication channels should we explore before marking undeliverable?</p>
                 </div>
                 
-                <div class="insight-item">
-                    <div class="insight-title">3. Escalation Process for Aged Cases</div>
-                    <p>Implement automatic escalation for cases over 30 days old, with management involvement at 60+ days.</p>
+                <div class="question-item">
+                    <div class="question-title">IEB Closed Response Framework</div>
+                    <p><strong>Question:</strong> Can we create pre-approval criteria for adding clients back to the platform when IEB closure is due to temporary issues?</p>
+                    <p><strong>Consider:</strong> What documentation is needed to reopen an IEB? How quickly can we verify BOR status changes?</p>
                 </div>
                 
-                <div class="insight-item">
-                    <div class="insight-title">4. Marketing Event Process Review</div>
-                    <p>Audit current marketing event invitation processes to ensure all relevant parties are included.</p>
+                <div class="question-item">
+                    <div class="question-title">Incumbent Marketing Approval Efficiency</div>
+                    <p><strong>Question:</strong> Can we create pre-authorized scenarios for marketing without incumbent to reduce approval bottlenecks?</p>
+                    <p><strong>Consider:</strong> What criteria would qualify for automatic approval? How can we maintain compliance while improving speed?</p>
+                </div>
+                
+                <div class="question-item">
+                    <div class="question-title">High-Frequency Broker Management</div>
+                    <p><strong>Question:</strong> Should we implement dedicated account management for brokers with consistently high pending volumes?</p>
+                    <p><strong>Consider:</strong> What threshold triggers enhanced support? How can we proactively address systematic issues?</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Real data from the CSV analysis
-        const renewalsData = {
+        // Enhanced data with real patterns from CSV analysis
+        const threeFlowData = {
             totalCases: 42,
-            blockers: {
-                "Missing Documents/Rates": 16,
-                "Other/Unclear": 14,
-                "Data/Information Gaps": 5,
-                "Plan/Coverage Issues": 5,
-                "Broker Communication": 5,
-                "Processing Delays": 3,
-                "System/Setup Issues": 2
+            patterns: {
+                "Missing Carrier Contact": 14,
+                "IEB Closed": 6,
+                "Incumbent Not Invited": 5,
+                "Needs Clarification": 1,
+                "Missing Documents": 1,
+                "Other": 15
             },
-            ageDistribution: {
-                "0-14 days": 21,
+            agingDistribution: {
+                "0-7 days": 15,
+                "8-14 days": 6,
                 "15-30 days": 8,
                 "31-60 days": 9,
-                "61+ days": 4
+                "61-90 days": 2,
+                "90+ days": 2
             },
             brokers: [
                 {
@@ -387,133 +669,116 @@
                     totalCases: 7,
                     avgDays: 21,
                     maxDays: 46,
-                    mainBlockers: ["Other/Unclear", "Broker Communication"]
+                    patterns: ["Missing Carrier Contact (1)", "IEB Closed (3)", "Incumbent Not Invited (2)"],
+                    ageDistribution: { "31-60 days": 1, "15-30 days": 4, "0-7 days": 2 },
+                    isHighFrequency: true
                 },
                 {
                     name: "McGohan Brabender",
                     totalCases: 4,
                     avgDays: 26,
                     maxDays: 59,
-                    mainBlockers: ["Broker Communication", "Data/Information Gaps"]
+                    patterns: ["Incumbent Not Invited (1)"],
+                    ageDistribution: { "31-60 days": 2, "8-14 days": 1, "0-7 days": 1 },
+                    isHighFrequency: true
                 },
                 {
                     name: "Marsh McLennan - Virginia",
                     totalCases: 3,
                     avgDays: 5,
                     maxDays: 9,
-                    mainBlockers: ["Missing Documents/Rates"]
+                    patterns: ["Missing Carrier Contact (3)"],
+                    ageDistribution: { "8-14 days": 1, "0-7 days": 2 },
+                    isHighFrequency: true
                 },
                 {
                     name: "The Partners Group",
                     totalCases: 2,
                     avgDays: 52,
                     maxDays: 58,
-                    mainBlockers: ["Other/Unclear"]
+                    patterns: ["IEB Closed (1)"],
+                    ageDistribution: { "31-60 days": 2 }
                 },
                 {
                     name: "IMA",
                     totalCases: 2,
                     avgDays: 14,
                     maxDays: 25,
-                    mainBlockers: ["Missing Documents/Rates", "Plan/Coverage Issues"]
+                    patterns: ["Missing Carrier Contact (1)"],
+                    ageDistribution: { "15-30 days": 1, "0-7 days": 1 }
                 },
                 {
                     name: "Henderson Brothers",
                     totalCases: 2,
                     avgDays: 8,
                     maxDays: 8,
-                    mainBlockers: ["Missing Documents/Rates"]
+                    patterns: ["Missing Carrier Contact (2)"],
+                    ageDistribution: { "8-14 days": 2 }
                 },
                 {
                     name: "Alliant Insurance Services",
                     totalCases: 1,
                     avgDays: 212,
                     maxDays: 212,
-                    mainBlockers: ["Data/Information Gaps", "Plan/Coverage Issues"]
+                    patterns: ["Needs Clarification (1)"],
+                    ageDistribution: { "90+ days": 1 },
+                    isCritical: true
                 },
                 {
                     name: "CAC Agency",
                     totalCases: 1,
                     avgDays: 106,
                     maxDays: 106,
-                    mainBlockers: ["Missing Documents/Rates", "Processing Delays"]
+                    patterns: ["Missing Documents (1)"],
+                    ageDistribution: { "90+ days": 1 },
+                    isCritical: true
                 }
-            ],
-            carriers: {
-                "Guardian": 15,
-                "Sun Life": 4,
-                "Hartford": 3,
-                "Delta Dental of Wisconsin": 3,
-                "Anthem": 2,
-                "Cigna": 2,
-                "Superior Dental": 1,
-                "New York Life": 1,
-                "BCBS of North Carolina": 1,
-                "Mtutual of Omaha": 1,
-                "Reliance Matrix": 1,
-                "Delta Dental Plan of Ohio": 1,
-                "UHC": 1,
-                "CareFirst": 1,
-                "Delta Dental of Delaware": 1,
-                "VBA": 1,
-                "BCBS of NC": 1,
-                "Delta Dental of VA": 1,
-                "Principal": 1
-            }
+            ]
         };
-                
 
-        // Initialize charts and content
+        // ThreeFlow color palette
+        const colors = {
+            primary: '#00B980',
+            secondary: '#000099',
+            accent1: '#1A7848',
+            accent2: '#53B684',
+            accent3: '#85DABA',
+            accent4: '#7A7FF5',
+            accent5: '#A3A5F9',
+            accent6: '#8A288E',
+            accent7: '#B263C8',
+            accent8: '#D89CE8',
+            accent9: '#D7CC43',
+            accent10: '#EAE950',
+            accent11: '#FFFB99'
+        };
+
         function initializeReport() {
             try {
-                createBlockersChart();
-            } catch (e) {
-                console.error('Error creating blockers chart:', e);
-            }
-            
-            try {
-                createAgeChart();
-            } catch (e) {
-                console.error('Error creating age chart:', e);
-            }
-            
-            try {
-                createCarriersChart();
-            } catch (e) {
-                console.error('Error creating carriers chart:', e);
-            }
-            
-            try {
+                createPatternsChart();
+                createAgingChart();
+                createPatternsDetailChart();
                 populateBrokersList();
             } catch (e) {
-                console.error('Error populating brokers list:', e);
-            }
-            
-            try {
-                populateCarriersList();
-            } catch (e) {
-                console.error('Error populating carriers list:', e);
+                console.error('Error initializing report:', e);
             }
         }
 
-        function createBlockersChart() {
-            const ctx = document.getElementById('blockersChart');
-            if (!ctx) {
-                console.error('Blockers chart canvas not found');
-                return;
-            }
+        function createPatternsChart() {
+            const ctx = document.getElementById('patternsChart');
+            if (!ctx) return;
             
             new Chart(ctx.getContext('2d'), {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(renewalsData.blockers),
+                    labels: Object.keys(threeFlowData.patterns),
                     datasets: [{
-                        data: Object.values(renewalsData.blockers),
+                        data: Object.values(threeFlowData.patterns),
                         backgroundColor: [
-                            '#dc2626', '#f59e0b', '#10b981', '#3b82f6', 
-                            '#8b5cf6', '#f97316', '#06b6d4'
+                            colors.accent8, colors.accent5, colors.accent2, 
+                            colors.accent9, colors.accent10, colors.accent3
                         ],
-                        borderWidth: 2,
+                        borderWidth: 3,
                         borderColor: '#ffffff'
                     }]
                 },
@@ -523,8 +788,9 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                padding: 15,
-                                font: { size: 12 }
+                                padding: 20,
+                                font: { size: 13, family: 'Lato', weight: '600' },
+                                color: colors.secondary
                             }
                         }
                     }
@@ -532,22 +798,23 @@
             });
         }
 
-        function createAgeChart() {
-            const ctx = document.getElementById('ageChart');
-            if (!ctx) {
-                console.error('Age chart canvas not found');
-                return;
-            }
+        function createAgingChart() {
+            const ctx = document.getElementById('agingChart');
+            if (!ctx) return;
             
             new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(renewalsData.ageDistribution),
+                    labels: Object.keys(threeFlowData.agingDistribution),
                     datasets: [{
                         label: 'Number of Cases',
-                        data: Object.values(renewalsData.ageDistribution),
-                        backgroundColor: ['#10b981', '#f59e0b', '#f97316', '#dc2626'],
-                        borderWidth: 1
+                        data: Object.values(threeFlowData.agingDistribution),
+                        backgroundColor: [
+                            colors.accent3, colors.accent10, colors.accent5, 
+                            colors.accent8, colors.accent7, colors.accent6
+                        ],
+                        borderWidth: 2,
+                        borderColor: colors.secondary
                     }]
                 },
                 options: {
@@ -555,7 +822,17 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: { stepSize: 2 }
+                            ticks: { 
+                                stepSize: 2,
+                                font: { family: 'Lato', weight: '600' },
+                                color: colors.secondary
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: { family: 'Lato', weight: '600' },
+                                color: colors.secondary
+                            }
                         }
                     },
                     plugins: {
@@ -565,24 +842,27 @@
             });
         }
 
-        function createCarriersChart() {
-            const ctx = document.getElementById('carriersChart').getContext('2d');
+        function createPatternsDetailChart() {
+            const ctx = document.getElementById('patternsDetailChart');
+            if (!ctx) return;
             
-            // Sort carriers by case count for better visualization
-            const sortedCarriers = Object.entries(renewalsData.carriers)
-                .sort(([,a], [,b]) => b - a)
-                .slice(0, 10); // Top 10 carriers
+            const patternData = {
+                "Missing Carrier Contact": 14,
+                "IEB Closed": 6,
+                "Incumbent Not Invited": 5,
+                "Needs Clarification": 1
+            };
             
-            new Chart(ctx, {
+            new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: sortedCarriers.map(([name]) => name),
+                    labels: Object.keys(patternData),
                     datasets: [{
                         label: 'Number of Cases',
-                        data: sortedCarriers.map(([,count]) => count),
-                        backgroundColor: '#667eea',
-                        borderColor: '#4c63d2',
-                        borderWidth: 1
+                        data: Object.values(patternData),
+                        backgroundColor: [colors.accent8, colors.accent3, colors.accent10, colors.accent5],
+                        borderWidth: 2,
+                        borderColor: colors.secondary
                     }]
                 },
                 options: {
@@ -592,8 +872,15 @@
                         x: {
                             beginAtZero: true,
                             ticks: { 
-                                stepSize: 1,
-                                precision: 0
+                                stepSize: 2,
+                                font: { family: 'Lato', weight: '600' },
+                                color: colors.secondary
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                font: { family: 'Lato', weight: '600' },
+                                color: colors.secondary
                             }
                         }
                     },
@@ -606,91 +893,119 @@
 
         function populateBrokersList() {
             const container = document.getElementById('brokersList');
-            const brokersHtml = renewalsData.brokers.map(broker => `
-                <div class="broker-card">
-                    <div class="broker-name">${broker.name}</div>
-                    <div class="broker-stats">
-                        <div class="broker-stat">
-                            <div class="broker-stat-number">${broker.totalCases}</div>
-                            <div class="broker-stat-label">Total Cases</div>
+            if (!container) return;
+            
+            const brokersHtml = threeFlowData.brokers.map(broker => {
+                const cardClass = broker.isHighFrequency ? 'broker-card high-frequency' : 'broker-card';
+                const frequencyBadge = broker.isHighFrequency ? 
+                    `<span class="frequency-badge">High Frequency</span>` : '';
+                const criticalBadge = broker.isCritical ? 
+                    `<span class="frequency-badge" style="background: #8A288E; color: white;">CRITICAL AGE</span>` : '';
+                
+                const ageSegments = Object.entries(broker.ageDistribution)
+                    .map(([age, count]) => {
+                        const ageClass = age.includes('0-7') ? 'age-fresh' :
+                                       age.includes('8-14') ? 'age-recent' :
+                                       age.includes('15-30') ? 'age-standard' :
+                                       age.includes('31-60') ? 'age-aging' :
+                                       age.includes('61-90') ? 'age-critical' : 'age-urgent';
+                        return `<div class="age-segment ${ageClass}">${count} ${age.split(' ')[0]}</div>`;
+                    }).join('');
+                
+                const patternTags = broker.patterns.map(pattern => {
+                    const patternClass = pattern.toLowerCase().includes('incumbent') ? 'pattern-incumbent' :
+                                       pattern.toLowerCase().includes('contact') ? 'pattern-contact' :
+                                       pattern.toLowerCase().includes('ieb') ? 'pattern-ieb' :
+                                       pattern.toLowerCase().includes('document') ? 'pattern-docs' : 'pattern-clarification';
+                    return `<span class="pattern-tag ${patternClass}">${pattern}</span>`;
+                }).join('');
+                
+                return `
+                    <div class="${cardClass}" data-cases="${broker.totalCases}" data-avg-days="${broker.avgDays}">
+                        <div class="broker-name">
+                            ${broker.name}
+                            ${frequencyBadge}
+                            ${criticalBadge}
                         </div>
-                        <div class="broker-stat">
-                            <div class="broker-stat-number">${broker.avgDays}</div>
-                            <div class="broker-stat-label">Avg Days</div>
-                        </div>
-                        <div class="broker-stat">
-                            <div class="broker-stat-number">${broker.maxDays}</div>
-                            <div class="broker-stat-label">Max Days</div>
-                        </div>
-                    </div>
-                    <div class="blockers-list">
-                        ${broker.mainBlockers.map(blocker => 
-                            `<span class="blocker-tag">${blocker}</span>`
-                        ).join('')}
-                    </div>
-                </div>
-            `).join('');
-            container.innerHTML = brokersHtml;
-        }
-
-        function populateCarriersList() {
-            const container = document.getElementById('carriersList');
-            const carriersHtml = Object.entries(renewalsData.carriers)
-                .sort(([,a], [,b]) => b - a)
-                .map(([carrier, cases]) => `
-                    <div class="broker-card">
-                        <div class="broker-name">${carrier}</div>
                         <div class="broker-stats">
                             <div class="broker-stat">
-                                <div class="broker-stat-number">${cases}</div>
+                                <div class="broker-stat-number">${broker.totalCases}</div>
                                 <div class="broker-stat-label">Total Cases</div>
                             </div>
                             <div class="broker-stat">
-                                <div class="broker-stat-number">${((cases/42)*100).toFixed(1)}%</div>
-                                <div class="broker-stat-label">% of Total</div>
+                                <div class="broker-stat-number">${broker.avgDays}</div>
+                                <div class="broker-stat-label">Avg Days</div>
+                            </div>
+                            <div class="broker-stat">
+                                <div class="broker-stat-number">${broker.maxDays}</div>
+                                <div class="broker-stat-label">Max Days</div>
                             </div>
                         </div>
+                        <div class="age-distribution">
+                            ${ageSegments}
+                        </div>
+                        <div class="patterns-list">
+                            ${patternTags}
+                        </div>
                     </div>
-                `).join('');
-            container.innerHTML = carriersHtml;
-        }
-
-        function showTab(tabName) {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
+                `;
+            }).join('');
             
-            // Remove active class from all tabs
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Show selected tab content
-            document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to clicked tab
-            event.target.classList.add('active');
+            container.innerHTML = brokersHtml;
         }
 
         function filterBrokers() {
             const filter = document.getElementById('brokerFilter').value;
-            const brokerCards = document.querySelectorAll('.broker-card');
+            const brokerCards = document.querySelectorAll('#brokersList .broker-card');
             
             brokerCards.forEach(card => {
-                const avgDays = parseInt(card.querySelector('.broker-stat-number').textContent);
-                const totalCases = parseInt(card.querySelector('.broker-stat:first-child .broker-stat-number').textContent);
-                
-                let show = true;
-                if (filter === 'high' && totalCases < 3) show = false;
-                if (filter === 'old' && avgDays < 30) show = false;
-                
-                card.style.display = show ? 'block' : 'none';
+                try {
+                    const totalCases = parseInt(card.getAttribute('data-cases'));
+                    const avgDays = parseInt(card.getAttribute('data-avg-days'));
+                    
+                    let show = true;
+                    if (filter === 'high' && totalCases < 3) show = false;
+                    if (filter === 'aging' && avgDays < 30) show = false;
+                    if (filter === 'critical' && avgDays < 60) show = false;
+                    
+                    card.style.display = show ? 'block' : 'none';
+                } catch (e) {
+                    console.warn('Error filtering broker card:', e);
+                    card.style.display = 'block';
+                }
             });
         }
 
-        // Initialize the report when page loads
-        document.addEventListener('DOMContentLoaded', initializeReport);
+        function showTab(tabName) {
+            try {
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                const selectedTab = document.getElementById(tabName);
+                if (selectedTab) {
+                    selectedTab.classList.add('active');
+                }
+                
+                if (event && event.target) {
+                    event.target.classList.add('active');
+                }
+            } catch (e) {
+                console.error('Error switching tabs:', e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                initializeReport();
+            } catch (e) {
+                console.error('Error initializing report:', e);
+            }
+        });
     </script>
 </body>
 </html>
