@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Renewals Analysis Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        .nav-tab:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .nav-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+        }
+        .stat-label {
+            color: #64748b;
+            font-size: 1.1em;
+            margin: 5px 0 0 0;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .chart-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .broker-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-left: 4px solid #f59e0b;
+        }
+        .broker-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .broker-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .broker-stat {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fc;
+            border-radius: 8px;
+        }
+        .broker-stat-number {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .broker-stat-label {
+            color: #64748b;
+            font-size: 0.9em;
+        }
+        .blockers-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .blocker-tag {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .insights-section {
+            background: #f0f9ff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid #0ea5e9;
+        }
+        .insights-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #0c4a6e;
+            margin-bottom: 15px;
+        }
+        .insight-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+        .insight-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .alert-high { border-left-color: #dc2626; }
+        .alert-medium { border-left-color: #f59e0b; }
+        .alert-low { border-left-color: #10b981; }
+        
+        .filter-section {
+            background: #f8f9fc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+        .filter-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .filter-control select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .cases-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .cases-table th,
+        .cases-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .cases-table th {
+            background: #f8f9fc;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .age-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        .age-new { background: #dcfce7; color: #166534; }
+        .age-medium { background: #fef3c7; color: #92400e; }
+        .age-old { background: #fecaca; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Pending Renewals Analysis</h1>
+            <p>Internal Team Blocker Analysis Report - 42 Total Cases</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('overview')">Overview</button>
+            <button class="nav-tab" onclick="showTab('brokers')">Broker Analysis</button>
+            <button class="nav-tab" onclick="showTab('carriers')">Carrier Analysis</button>
+            <button class="nav-tab" onclick="showTab('insights')">Key Insights</button>
+        </div>
+        
+        <div id="overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">42</div>
+                    <div class="stat-label">Total Pending Cases</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">27.5</div>
+                    <div class="stat-label">Average Days Old</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">212</div>
+                    <div class="stat-label">Oldest Case (Days)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">28</div>
+                    <div class="stat-label">Unique Brokers</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Main Blockers Distribution</div>
+                <canvas id="blockersChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Case Age Distribution</div>
+                <canvas id="ageChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        
+        <div id="brokers" class="tab-content">
+            <div class="filter-section">
+                <h3>Filter Brokers</h3>
+                <div class="filter-controls">
+                    <select id="brokerFilter" onchange="filterBrokers()">
+                        <option value="all">All Brokers</option>
+                        <option value="high">High Volume (3+ cases)</option>
+                        <option value="old">Oldest Cases (30+ days avg)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="brokersList">
+                <!-- Broker cards will be populated here -->
+            </div>
+        </div>
+        
+        <div id="carriers" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-title">Cases by Carrier</div>
+                <canvas id="carriersChart" width="400" height="300"></canvas>
+            </div>
+            
+            <div id="carriersList">
+                <!-- Carrier analysis will be populated here -->
+            </div>
+        </div>
+        
+        <div id="insights" class="tab-content">
+            <div class="insights-section">
+                <div class="insights-title">🚨 Critical Issues</div>
+                
+                <div class="insight-item alert-high">
+                    <div class="insight-title">Missing Documents/Rates - Top Blocker</div>
+                    <p><strong>38.1% of all cases (16 cases)</strong> are blocked due to missing documents or current rates. This is the #1 issue preventing renewals processing.</p>
+                    <p><strong>Action needed:</strong> Implement proactive document collection process with brokers before renewal deadlines.</p>
+                </div>
+                
+                <div class="insight-item alert-high">
+                    <div class="insight-title">Oldest Cases Require Immediate Attention</div>
+                    <p>Cases over 60 days old represent critical renewal risks. The oldest case is <strong>212 days old</strong> from Alliant Insurance Services.</p>
+                    <p><strong>Priority brokers for immediate outreach:</strong> Alliant Insurance Services (212 days), CAC Agency (106 days), and The Partners Group (avg 52 days).</p>
+                </div>
+                
+                <div class="insight-item alert-low">
+                    <div class="insight-title">Guardian Dominance in Pending Cases</div>
+                    <p><strong>Guardian represents 35.7% of all pending cases (15 cases)</strong>, significantly higher than other carriers. This concentration may indicate carrier-specific processing challenges.</p>
+                    <p><strong>Action needed:</strong> Review Guardian renewal processes and timelines for potential improvements.</p>
+                </div>
+                
+                <div class="insight-item alert-medium">
+                    <div class="insight-title">High-Volume Broker Patterns</div>
+                    <p><strong>M3 (7 cases)</strong> and <strong>McGohan Brabender (4 cases)</strong> have the most pending renewals, suggesting systematic issues rather than isolated problems.</p>
+                    <p><strong>Focus areas:</strong> M3 shows "Other/Unclear" blockers - needs better documentation of specific issues. McGohan Brabender has broker communication problems.</p>
+                </div>
+            </div>
+            
+            <div class="insights-section">
+                <div class="insights-title">📊 Recommended Actions</div>
+                
+                <div class="insight-item">
+                    <div class="insight-title">1. Implement Document Pre-Collection</div>
+                    <p>Create automated reminders 45-60 days before renewal dates requesting current rates and renewal documents.</p>
+                </div>
+                
+                <div class="insight-item">
+                    <div class="insight-title">2. Broker Relationship Management</div>
+                    <p>Schedule quarterly check-ins with high-volume brokers to address systematic blockers.</p>
+                </div>
+                
+                <div class="insight-item">
+                    <div class="insight-title">3. Escalation Process for Aged Cases</div>
+                    <p>Implement automatic escalation for cases over 30 days old, with management involvement at 60+ days.</p>
+                </div>
+                
+                <div class="insight-item">
+                    <div class="insight-title">4. Marketing Event Process Review</div>
+                    <p>Audit current marketing event invitation processes to ensure all relevant parties are included.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Real data from the CSV analysis
+        const renewalsData = {
+            totalCases: 42,
+            blockers: {
+                "Missing Documents/Rates": 16,
+                "Other/Unclear": 14,
+                "Data/Information Gaps": 5,
+                "Plan/Coverage Issues": 5,
+                "Broker Communication": 5,
+                "Processing Delays": 3,
+                "System/Setup Issues": 2
+            },
+            ageDistribution: {
+                "0-14 days": 21,
+                "15-30 days": 8,
+                "31-60 days": 9,
+                "61+ days": 4
+            },
+            brokers: [
+                {
+                    name: "M3",
+                    totalCases: 7,
+                    avgDays: 21,
+                    maxDays: 46,
+                    mainBlockers: ["Other/Unclear", "Broker Communication"]
+                },
+                {
+                    name: "McGohan Brabender",
+                    totalCases: 4,
+                    avgDays: 26,
+                    maxDays: 59,
+                    mainBlockers: ["Broker Communication", "Data/Information Gaps"]
+                },
+                {
+                    name: "Marsh McLennan - Virginia",
+                    totalCases: 3,
+                    avgDays: 5,
+                    maxDays: 9,
+                    mainBlockers: ["Missing Documents/Rates"]
+                },
+                {
+                    name: "The Partners Group",
+                    totalCases: 2,
+                    avgDays: 52,
+                    maxDays: 58,
+                    mainBlockers: ["Other/Unclear"]
+                },
+                {
+                    name: "IMA",
+                    totalCases: 2,
+                    avgDays: 14,
+                    maxDays: 25,
+                    mainBlockers: ["Missing Documents/Rates", "Plan/Coverage Issues"]
+                },
+                {
+                    name: "Henderson Brothers",
+                    totalCases: 2,
+                    avgDays: 8,
+                    maxDays: 8,
+                    mainBlockers: ["Missing Documents/Rates"]
+                },
+                {
+                    name: "Alliant Insurance Services",
+                    totalCases: 1,
+                    avgDays: 212,
+                    maxDays: 212,
+                    mainBlockers: ["Data/Information Gaps", "Plan/Coverage Issues"]
+                },
+                {
+                    name: "CAC Agency",
+                    totalCases: 1,
+                    avgDays: 106,
+                    maxDays: 106,
+                    mainBlockers: ["Missing Documents/Rates", "Processing Delays"]
+                }
+            ],
+            carriers: {
+                "Guardian": 15,
+                "Sun Life": 4,
+                "Hartford": 3,
+                "Delta Dental of Wisconsin": 3,
+                "Anthem": 2,
+                "Cigna": 2,
+                "Superior Dental": 1,
+                "New York Life": 1,
+                "BCBS of North Carolina": 1,
+                "Mtutual of Omaha": 1,
+                "Reliance Matrix": 1,
+                "Delta Dental Plan of Ohio": 1,
+                "UHC": 1,
+                "CareFirst": 1,
+                "Delta Dental of Delaware": 1,
+                "VBA": 1,
+                "BCBS of NC": 1,
+                "Delta Dental of VA": 1,
+                "Principal": 1
+            }
+        };
+                
+
+        // Initialize charts and content
+        function initializeReport() {
+            createBlockersChart();
+            createAgeChart();
+            createCarriersChart();
+            populateBrokersList();
+            populateCarriersList();
+        }
+
+        function createBlockersChart() {
+            const ctx = document.getElementById('blockersChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(renewalsData.blockers),
+                    datasets: [{
+                        data: Object.values(renewalsData.blockers),
+                        backgroundColor: [
+                            '#dc2626', '#f59e0b', '#10b981', '#3b82f6', 
+                            '#8b5cf6', '#f97316', '#06b6d4'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: { size: 12 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createAgeChart() {
+            const ctx = document.getElementById('ageChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(renewalsData.ageDistribution),
+                    datasets: [{
+                        label: 'Number of Cases',
+                        data: Object.values(renewalsData.ageDistribution),
+                        backgroundColor: ['#10b981', '#f59e0b', '#f97316', '#dc2626'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 2 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function createCarriersChart() {
+            const ctx = document.getElementById('carriersChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: Object.keys(renewalsData.carriers),
+                    datasets: [{
+                        label: 'Cases',
+                        data: Object.values(renewalsData.carriers),
+                        backgroundColor: '#667eea',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function populateBrokersList() {
+            const container = document.getElementById('brokersList');
+            const brokersHtml = renewalsData.brokers.map(broker => `
+                <div class="broker-card">
+                    <div class="broker-name">${broker.name}</div>
+                    <div class="broker-stats">
+                        <div class="broker-stat">
+                            <div class="broker-stat-number">${broker.totalCases}</div>
+                            <div class="broker-stat-label">Total Cases</div>
+                        </div>
+                        <div class="broker-stat">
+                            <div class="broker-stat-number">${broker.avgDays}</div>
+                            <div class="broker-stat-label">Avg Days</div>
+                        </div>
+                        <div class="broker-stat">
+                            <div class="broker-stat-number">${broker.maxDays}</div>
+                            <div class="broker-stat-label">Max Days</div>
+                        </div>
+                    </div>
+                    <div class="blockers-list">
+                        ${broker.mainBlockers.map(blocker => 
+                            `<span class="blocker-tag">${blocker}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `).join('');
+            container.innerHTML = brokersHtml;
+        }
+
+        function populateCarriersList() {
+            const container = document.getElementById('carriersList');
+            const carriersHtml = Object.entries(renewalsData.carriers)
+                .sort(([,a], [,b]) => b - a)
+                .map(([carrier, cases]) => `
+                    <div class="broker-card">
+                        <div class="broker-name">${carrier}</div>
+                        <div class="broker-stats">
+                            <div class="broker-stat">
+                                <div class="broker-stat-number">${cases}</div>
+                                <div class="broker-stat-label">Total Cases</div>
+                            </div>
+                            <div class="broker-stat">
+                                <div class="broker-stat-number">${((cases/42)*100).toFixed(1)}%</div>
+                                <div class="broker-stat-label">% of Total</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            container.innerHTML = carriersHtml;
+        }
+
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function filterBrokers() {
+            const filter = document.getElementById('brokerFilter').value;
+            const brokerCards = document.querySelectorAll('.broker-card');
+            
+            brokerCards.forEach(card => {
+                const avgDays = parseInt(card.querySelector('.broker-stat-number').textContent);
+                const totalCases = parseInt(card.querySelector('.broker-stat:first-child .broker-stat-number').textContent);
+                
+                let show = true;
+                if (filter === 'high' && totalCases < 3) show = false;
+                if (filter === 'old' && avgDays < 30) show = false;
+                
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        // Initialize the report when page loads
+        document.addEventListener('DOMContentLoaded', initializeReport);
+    </script>
+</body>
+</html>
